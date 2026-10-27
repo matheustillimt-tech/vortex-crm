@@ -1,0 +1,22 @@
+# Segredos: nunca versionar (só o modelo .env.example)
+.env
+.env.*
+!.env.example
+
+# Gerados
+node_modules
+dist
+.next
+.vercel
+*.tsbuildinfo
+*.log
+.DS_Store
+
+# Supabase local
+supabase/.temp
+supabase/.branches
+
+# Testes do SQL (Postgres embutido)
+supabase/tests/sql/node_modules
+supabase/tests/sql/data
+supabase/tests/sql/package-lock.json

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Atendimento indisponível | Vórtex CRM</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=4" />
+  <link rel="stylesheet" href="/legal/legal.css" />
+  <style>
+    main { max-width: 520px; padding-top: 12vh; }
+    article { text-align: center; }
+    h1 { font-size: clamp(24px, 6vw, 30px); }
+    .btn { display: inline-block; margin-top: 16px; padding: 12px 22px; border-radius: 14px; background: var(--accent); color: var(--bg); font-weight: 700; text-decoration: none; }
+    .btn[hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <!-- A função rotacionador manda para cá quando o link está desligado ou nenhum número está no ar:
+       ?motivo=sem-numero|link|erro&r=<endereço do link> -->
+  <main>
+    <article>
+      <h1 id="titulo">Nenhum atendente disponível agora</h1>
+      <p id="texto">Nossos números de atendimento estão sendo reconectados. Tente de novo em alguns minutos.</p>
+      <a id="denovo" class="btn" href="#" hidden>Tentar de novo</a>
+    </article>
+  </main>
+  <script>
+    var q = new URLSearchParams(location.search)
+    var textos = {
+      link: ['Este link não está ativo', 'Ele foi desligado ou mudou de endereço. Peça o link atualizado a quem te enviou.'],
+      erro: ['Não deu para abrir o atendimento', 'Tente de novo em instantes.'],
+    }
+    var t = textos[q.get('motivo')]
+    if (t) { document.getElementById('titulo').textContent = t[0]; document.getElementById('texto').textContent = t[1] }
+    var r = q.get('r') || ''
+    if (q.get('motivo') !== 'link' && /^[a-z0-9][a-z0-9-]{1,58}[a-z0-9]$/.test(r)) {
+      var b = document.getElementById('denovo')
+      b.href = '/r/' + r
+      b.hidden = false
+    }
+  </script>
+</body>
+</html>

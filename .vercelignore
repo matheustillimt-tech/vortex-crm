@@ -1,0 +1,11 @@
+# do supabase só sobe o arquivo que o painel importa do servidor: triggers-core.ts (regras de gatilho do editor de
+# fluxos)
+supabase/*
+!supabase/functions/
+supabase/functions/*
+!supabase/functions/_shared/
+supabase/functions/_shared/*
+!supabase/functions/_shared/triggers-core.ts
+.claude
+.env
+.env.*

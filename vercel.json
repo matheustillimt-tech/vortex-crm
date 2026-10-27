@@ -1,0 +1,12 @@
+{
+  "framework": "vite",
+  "buildCommand": "vite build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/privacidade", "destination": "/privacidade/index.html" },
+    { "source": "/termos", "destination": "/termos/index.html" },
+    { "source": "/rotacionador-indisponivel", "destination": "/rotacionador-indisponivel/index.html" },
+    { "source": "/r/:slug", "destination": "https://SEU-PROJETO.supabase.co/functions/v1/rotacionador/:slug" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

@@ -1,0 +1,649 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =====================================================================
+   Identidade visual Vórtex CRM, baseada na tela de login de
+   lara-empreende-ia.vercel.app: verde-esmeralda sobre fundo verde-petróleo
+   quase preto, painéis de "vidro" com borda fina e brilho no topo, cantos
+   bem arredondados. Tipografia: fonte Inter, escala e pesos do design system do Grupo Vórtex.
+   Os valores marcados "ref" vêm direto dos tokens da referência; o resto
+   (telas internas) foi derivado deles.
+   Cores com opacidade usam canais RGB ("15 169 104").
+   ===================================================================== */
+
+/* ---------- Escuro (padrão) ---------- */
+:root,
+html.dark {
+  /* escala "violet" = cor de marca (esmeralda) — nome mantido para não mexer nas páginas */
+  --v-50: 236 253 245; --v-100: 209 250 229; --v-200: 182 240 210; --v-300: 141 231 187; --v-400: 101 223 171;
+  --v-500: 15 169 104; --v-600: 19 121 79; --v-700: 11 97 64; --v-800: 9 84 54; --v-900: 6 47 31; --v-950: 2 22 13;
+  --fuchsia-600: 15 169 104;
+  --blue-300: 195 220 205; --blue-400: 154 184 173; --blue-500: 154 184 173;
+  --green-300: 182 240 210; --green-400: 141 231 187;   /* ref success #8de7bb */
+  --red-300: 248 198 196; --red-400: 244 170 168;       /* ref danger #f4aaa8 */
+  --amber-300: 246 222 170; --amber-400: 241 206 135;   /* ref warning #f1ce87 */
+
+  --accent: 15 169 104;            /* ref accent #0fa968 */
+  --accent-hover: #158359;         /* ref */
+  --accent-soft: rgba(15, 169, 104, 0.14);
+  --accent-fg: #ffffff;            /* ref on-accent */
+  --focus: #91f2c3;                /* ref focus */
+  --focus-ring: rgba(15, 169, 104, 0.25);
+
+  --surface-base: #080a09;         /* ref bg */
+  --surface-sidebar: #0d120f;
+  --surface-raised: #111613;       /* ref surface */
+  --surface-overlay: #1b221e;      /* ref surface-raised */
+  --surface-interactive: #242e28;  /* ref surface-hover */
+  --surface-flow-canvas: #0a0d0b;
+  --border-default: rgba(255, 255, 255, 0.15);
+  --border-hover: rgba(255, 255, 255, 0.26);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-control: #76877c;       /* ref border-control (campos) */
+  --border-accent: rgba(116, 216, 168, 0.33); /* ref */
+  --text-primary: #f6f7f6;         /* ref text */
+  --text-secondary: #b4bdb7;       /* ref text-muted */
+  --text-muted: #929f96;           /* ref text-subtle */
+  --eyebrow: #929f96;
+  --accent-text: #8de7bb;          /* ref accent-text (links, destaque) */
+  --scrollbar-thumb: rgba(255, 255, 255, 0.16);
+
+  /* materiais (ref) */
+  --material-panel: linear-gradient(145deg, rgba(255, 255, 255, 0.031), rgba(255, 255, 255, 0.008) 60%), rgba(21, 28, 24, 0.79);
+  --material-hero: linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.012) 38%, rgba(184, 213, 195, 0.04)), rgba(18, 34, 27, 0.55);
+  --material-control: linear-gradient(145deg, rgba(255, 255, 255, 0.027), rgba(255, 255, 255, 0.008)), #101813;
+  --material-secondary: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.012)), #15211a;
+  --material-primary: linear-gradient(130deg, #13794f, #0b6140);
+  --shadow-panel: inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 1px 0 0 rgba(255, 255, 255, 0.04), 0 18px 45px rgba(0, 0, 0, 0.2);
+  --shadow-hero: inset 0 1px 0 rgba(255, 255, 255, 0.25), inset 1px 0 0 rgba(255, 255, 255, 0.04), 0 25px 60px rgba(0, 0, 0, 0.33);
+  --shadow-action: inset 0 1px 0 rgba(176, 241, 209, 0.45), inset 0 -1px 1px #004726, 0 6px 25px rgba(15, 169, 104, 0.15);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.19), inset 0 -1px 0 rgba(0, 0, 0, 0.33);
+  --page-glow: radial-gradient(48% 52% at 94% 32%, rgba(15, 169, 104, 0.1), transparent 75%), radial-gradient(42% 30% at 22% 86%, rgba(15, 169, 104, 0.05), transparent 75%);
+
+  --sel-bg: #242e28;
+  --sel-fg: #f6f7f6;
+  --sel-ring: inset 0 0 0 1px rgba(255, 255, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --nav-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.012)), #15211a;
+  --nav-fg: #f6f7f6;
+  --nav-border: rgba(116, 216, 168, 0.33);
+  --nav-ring: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  --nav-icon: #8de7bb;
+
+  --bubble-mine-bg: linear-gradient(130deg, #13794f, #0b6140);
+  --bubble-mine-fg: #ffffff;
+  --bubble-mine-border: rgba(116, 216, 168, 0.33);
+
+  --block-header: rgba(15, 169, 104, 0.07);
+  --dot: rgba(255, 255, 255, 0.05);
+  --scrim: rgba(2, 8, 5, 0.79);    /* ref material-scrim */
+  --shadow-glow-lg: 0 0 0 2px rgba(141, 231, 187, 0.45);
+  color-scheme: dark;
+}
+
+/* ---------- Claro ---------- */
+html.light {
+  /* no fundo claro, os tons usados como texto (200–400) viram verdes escuros (ref accent-text #08643e) */
+  --v-50: 2 22 13; --v-100: 6 47 31; --v-200: 9 84 54; --v-300: 8 100 62; --v-400: 12 112 72;
+  --v-500: 15 169 104; --v-600: 19 121 79; --v-700: 11 97 64; --v-800: 201 235 215; --v-900: 228 244 234; --v-950: 241 250 245;
+  --fuchsia-600: 15 169 104;
+  --blue-300: 52 76 66; --blue-400: 64 93 76; --blue-500: 86 133 108;
+  --green-300: 15 80 50; --green-400: 23 99 64;     /* ref success #176340 */
+  --red-300: 130 30 34; --red-400: 164 44 49;       /* ref danger #a42c31 */
+  --amber-300: 92 64 10; --amber-400: 115 81 12;    /* ref warning #73510c */
+
+  --accent-hover: #0c7048;
+  --accent-soft: rgba(15, 169, 104, 0.12);
+  --focus: #07683f;
+  --focus-ring: rgba(15, 169, 104, 0.2);
+
+  --surface-base: #f4f7f5;         /* ref bg */
+  --surface-sidebar: #ffffff;
+  --surface-raised: #ffffff;       /* ref surface */
+  --surface-overlay: #eaf0ec;      /* ref surface-raised */
+  --surface-interactive: #dcebe2;  /* ref surface-hover */
+  --surface-flow-canvas: #eef3f0;
+  --border-default: rgba(22, 77, 45, 0.16);
+  --border-hover: rgba(22, 77, 45, 0.3);
+  --border-subtle: rgba(22, 77, 45, 0.09);
+  --border-control: #6c8575;       /* ref */
+  --border-accent: rgba(22, 131, 86, 0.42);
+  --text-primary: #10251a;         /* ref */
+  --text-secondary: #405d4c;       /* ref */
+  --text-muted: #546f5f;           /* ref */
+  --eyebrow: #546f5f;
+  --accent-text: #08643e;          /* ref */
+  --scrollbar-thumb: rgba(22, 77, 45, 0.22);
+
+  --material-panel: linear-gradient(145deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.55) 65%), rgba(246, 251, 248, 0.9);
+  --material-hero: linear-gradient(135deg, rgba(255, 255, 255, 0.66) 0%, rgba(255, 255, 255, 0.15) 43%, rgba(224, 242, 233, 0.32)), rgba(255, 255, 255, 0.44);
+  --material-control: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.72) 70%), #e1ece5;
+  --material-secondary: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.48)), #dceae1;
+  --shadow-panel: inset 0 1px 0 #ffffff, inset 1px 0 0 rgba(255, 255, 255, 0.7), 0 2px 5px rgba(24, 61, 41, 0.06), 0 14px 30px rgba(24, 61, 41, 0.06);
+  --shadow-hero: inset 0 1px 0 #ffffff, inset 1px 0 0 rgba(255, 255, 255, 0.8), 0 2px 5px rgba(24, 61, 41, 0.07), 0 22px 48px rgba(24, 61, 41, 0.1);
+  --shadow-action: inset 0 1px 0 rgba(176, 241, 209, 0.5), inset 0 -1px 1px rgba(0, 71, 38, 0.4), 0 5px 14px rgba(12, 112, 72, 0.15);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.93), inset 0 -1px 0 rgba(43, 98, 71, 0.11);
+  --page-glow: radial-gradient(48% 52% at 94% 32%, rgba(15, 169, 104, 0.08), transparent 75%), radial-gradient(42% 30% at 22% 86%, rgba(15, 169, 104, 0.05), transparent 75%);
+
+  --sel-bg: #ffffff;
+  --sel-fg: #10251a;
+  --sel-ring: inset 0 0 0 1px rgba(22, 77, 45, 0.2), 0 1px 2px rgba(24, 61, 41, 0.06);
+  --nav-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.48)), #dceae1;
+  --nav-fg: #10251a;
+  --nav-border: rgba(22, 131, 86, 0.42);
+  --nav-ring: inset 0 1px 0 #ffffff;
+  --nav-icon: #08643e;
+
+  --bubble-mine-fg: #ffffff;
+  --block-header: rgba(15, 169, 104, 0.08);
+  --dot: rgba(22, 77, 45, 0.08);
+  --scrim: rgba(37, 70, 53, 0.32); /* ref material-scrim (claro) */
+  --shadow-glow-lg: 0 0 0 2px rgba(8, 100, 62, 0.4);
+  color-scheme: light;
+}
+
+/* ---------- Tipografia e forma (iguais nos dois modos) ---------- */
+:root {
+  /* tipografia: Inter, texto de 14px, títulos em 700 com -0.04em */
+  --font-sans: 'Inter';
+  --font-display: 'Inter';
+  --font-mono: 'JetBrains Mono';
+  --tracking-body: 0;
+  --tracking-heading: -0.04em;
+  --heading-weight: 700;
+
+  --radius-card: 20px;             /* derivado do raio de painel da ref (23px) */
+  --radius-panel: 23px;            /* ref */
+  --radius-hero: 30px;             /* ref (card de login) */
+  --radius-btn: 13px;              /* ref radius-control */
+  --radius-primary: 13px;
+  --radius-input: 13px;
+  --radius-badge: 8px;             /* ref radius-small */
+
+  --shadow-glow: none;
+  --mark-bg: linear-gradient(130deg, #13794f, #0b6140);
+  --mark-fg: #ffffff;
+  --banner-bg: var(--material-hero);
+}
+
+/* escala do Tailwind padrão (1rem = 16px); o texto corrido fica em 14px */
+html {
+  font-size: 16px;
+}
+
+body {
+  @apply bg-surface-base text-text-primary antialiased;
+  font-family: var(--font-sans), Arial, system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: var(--tracking-body);
+  background-image: var(--page-glow);
+  background-attachment: fixed;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display), var(--font-sans), Arial, sans-serif;
+  letter-spacing: var(--tracking-heading);
+}
+:root :is(h1, h2, h3, h4) {
+  font-weight: var(--heading-weight); /* especificidade maior que .font-bold do Tailwind */
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+@layer components {
+  /* card = painel de vidro: degradê translúcido, borda fina, brilho no topo */
+  .card {
+    @apply border border-border;
+    background: var(--material-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-panel);
+  }
+  .glass-hero {
+    @apply border border-border;
+    background: var(--material-hero);
+    border-radius: var(--radius-hero);
+    box-shadow: var(--shadow-hero);
+    backdrop-filter: blur(14px) saturate(115%);
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-3.5 py-2 text-sm transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50;
+    font-weight: 650;
+    letter-spacing: -0.005em;
+    border-radius: var(--radius-btn);
+  }
+  /* ação principal: degradê esmeralda com brilho interno (ref eia-btn-pri) */
+  .btn-primary {
+    @apply btn text-accent-fg hover:brightness-110;
+    background: var(--material-primary);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-primary);
+    box-shadow: var(--shadow-action);
+  }
+  .btn-secondary {
+    @apply btn border text-text-primary hover:border-border-hover;
+    background: var(--material-secondary);
+    border-color: var(--border-default);
+    box-shadow: var(--shadow-inset);
+  }
+  .btn-ghost {
+    @apply btn text-text-secondary hover:bg-surface-interactive hover:text-text-primary;
+  }
+  .btn-danger {
+    @apply btn bg-red-500/15 text-red-400 hover:bg-red-500/25;
+  }
+  /* campos: material "control", borda própria de campo, brilho interno */
+  .input {
+    @apply w-full border px-3 py-2 text-sm text-text-primary outline-none transition placeholder:text-text-muted;
+    background: var(--material-control);
+    border-color: var(--border-control);
+    border-radius: var(--radius-input);
+    box-shadow: var(--shadow-inset);
+  }
+  .input:focus {
+    border-color: var(--focus);
+    box-shadow: var(--shadow-inset), 0 0 0 3px var(--focus-ring);
+  }
+  .label {
+    @apply mb-1.5 block text-xs text-text-primary;
+    font-weight: 650;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-[11px];
+    font-weight: 650;
+    border-radius: var(--radius-badge);
+  }
+  .badge-primary { @apply badge bg-violet-500/15 text-violet-300; }
+  .badge-success { @apply badge bg-green-500/15 text-green-400; }
+  .badge-warning { @apply badge bg-amber-500/15 text-amber-400; }
+  .badge-danger { @apply badge bg-red-500/15 text-red-400; }
+  .badge-info { @apply badge bg-blue-500/15 text-blue-400; }
+  .badge-muted { @apply badge bg-surface-interactive text-text-muted; }
+
+  /* rótulo pequeno em caixa alta (ref: 10px, peso 750, tracking 0.11em) */
+  .eyebrow {
+    color: var(--eyebrow);
+  }
+  /* títulos de página (Inter 700, -0.04em, escala que cresce com a tela) */
+  .page-heading {
+    color: var(--text-primary);
+    font-size: clamp(26px, 2.4vw, 34px);
+    line-height: 1.1;
+    letter-spacing: -0.04em;
+    font-weight: 700;
+  }
+  .page-heading-lg {
+    font-size: clamp(28px, 3vw, 40px);
+  }
+  .page-subtitle {
+    margin-top: 6px;
+    color: var(--text-secondary);
+    font-size: 15px;
+  }
+
+  /* ---------- Menu lateral ----------
+     Item: cápsula de 44px, ícone 20px, texto 15px. Aberto: cápsula cheia na cor principal (a "barrinha"). */
+  .nav-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 44px;
+    padding: 10px 20px;
+    border-radius: 9999px;
+    font-size: 15px;
+    line-height: 1.35;
+    font-weight: 400;
+    color: var(--text-primary);
+    transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
+  }
+  .nav-row:hover {
+    background: var(--surface-interactive);
+  }
+  .nav-row[aria-current='page'] {
+    background: var(--material-primary);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: var(--shadow-action);
+  }
+  .nav-row:focus-visible,
+  .foot-row:focus-visible,
+  .dev-access:focus-visible,
+  .tutorial-cta:focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 2px;
+  }
+  .nav-badge {
+    flex-shrink: 0;
+    border-radius: 9999px;
+    border: 1px solid var(--border-accent);
+    padding: 1px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent-text);
+  }
+  .nav-row[aria-current='page'] .nav-badge {
+    border-color: rgba(255, 255, 255, 0.45);
+    color: #fff;
+  }
+  /* rodapé: linhas mais baixas, como os botões "ghost" */
+  .foot-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    min-height: 36px;
+    padding: 8px 16px;
+    border-radius: 9999px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    transition: background-color 0.15s;
+  }
+  .foot-row:hover {
+    background: var(--surface-interactive);
+  }
+  /* "Acesso ao desenvolvedor": pílula com borda forte (cor do texto), sombra curta, inverte no hover */
+  .dev-access {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-height: 36px;
+    padding: 8px 20px;
+    border-radius: 9999px;
+    border: 1.5px solid var(--text-primary);
+    background: var(--surface-base);
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.25);
+    transition: background-color 0.15s, color 0.15s;
+  }
+  .dev-access:hover,
+  .dev-access[aria-expanded='true'] {
+    background: var(--text-primary);
+    color: var(--surface-base);
+  }
+  /* Tutorial: bloco escuro com tinta da marca e uma luz percorrendo a borda (ver TutorialLight em Layout.jsx) */
+  .tutorial-cta {
+    position: relative;
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    margin-bottom: 6px;
+    padding: 8px 14px;
+    border-radius: 14px;
+    border: 1px solid rgb(var(--accent) / 0.35);
+    background: color-mix(in srgb, rgb(var(--accent)) 9%, #0c1913);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    transition: border-color 0.15s, background-color 0.15s;
+  }
+  .tutorial-cta:hover {
+    border-color: rgb(var(--accent) / 0.6);
+    background: color-mix(in srgb, rgb(var(--accent)) 14%, #0c1913);
+  }
+  .tutorial-light {
+    position: absolute;
+    inset: -1px;
+    width: calc(100% + 2px);
+    height: calc(100% + 2px);
+    overflow: visible;
+    pointer-events: none;
+  }
+  .tutorial-light rect {
+    width: calc(100% - 1px);
+    height: calc(100% - 1px);
+    rx: 13.5px;
+    animation: tutorial-light 5s linear infinite;
+  }
+  @keyframes tutorial-light {
+    from { stroke-dashoffset: 0; }
+    to { stroke-dashoffset: -100; }
+  }
+  /* movimento reduzido: sem luz circulando, só um brilho estático leve na borda */
+  @media (prefers-reduced-motion: reduce) {
+    .tutorial-light { display: none; }
+    .tutorial-cta { box-shadow: 0 0 6px -1px color-mix(in srgb, rgb(var(--accent)) 45%, transparent); }
+  }
+  .eyebrow-label {
+    @apply text-[10px] uppercase;
+    color: var(--eyebrow);
+    font-weight: 750;
+    letter-spacing: 0.11em;
+  }
+  /* versão com pontinho verde na frente (ref "● SUA AGENTE DE VENDAS COM IA") */
+  .eyebrow-dot::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: 8px;
+    border-radius: 9999px;
+    background: rgb(var(--accent));
+    box-shadow: 0 0 0 3px rgba(15, 169, 104, 0.2);
+    vertical-align: 1px;
+  }
+  .link-accent {
+    color: var(--accent-text);
+    font-weight: 650;
+  }
+  .brand-mark {
+    background: var(--mark-bg);
+    color: var(--mark-fg);
+    box-shadow: var(--shadow-action);
+  }
+  /* barras de navegação com vidro fosco */
+  .glass-bar {
+    background: var(--material-panel);
+    backdrop-filter: blur(14px) saturate(115%);
+  }
+  /* modais, avisos e painéis flutuantes: vidro mais opaco, com o brilho do card de login */
+  .glass-modal {
+    background: var(--material-panel);
+    backdrop-filter: blur(18px) saturate(115%);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-hero);
+  }
+  /* menu suspenso (⋯, menu do usuário, respostas rápidas) */
+  .menu-pop {
+    background: var(--material-panel);
+    backdrop-filter: blur(18px) saturate(115%);
+    border: 1px solid var(--border-default);
+    border-radius: 16px;
+    box-shadow: var(--shadow-hero);
+  }
+  /* sub-card dentro de outro card (itens de lista, opções, blocos de configuração) */
+  .panel-soft {
+    background: var(--material-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-btn);
+    box-shadow: var(--shadow-inset);
+  }
+  /* seletor pequeno de 2–3 opções (Valor/Qtd, Tabela/Gráfico) */
+  .seg {
+    display: flex;
+    padding: 3px;
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    background: var(--material-control);
+    box-shadow: var(--shadow-inset);
+  }
+  .seg > button {
+    border-radius: 9px;
+  }
+  /* quadradinho de ícone (ref: ícone do card de login) */
+  .icon-tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--material-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-btn);
+    box-shadow: var(--shadow-inset);
+    color: var(--accent-text);
+  }
+  /* chip/filtro selecionado e card de escolha selecionado */
+  .chip-on {
+    border-color: var(--border-accent);
+    background: var(--accent-soft);
+    color: var(--accent-text);
+  }
+  .choice-on {
+    border-color: var(--border-accent);
+    background: var(--accent-soft);
+    box-shadow: var(--shadow-inset);
+  }
+}
+
+@layer utilities {
+  /* abas que rolam de lado no celular, sem barra aparecendo dentro da pílula */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .is-selected {
+    background: var(--sel-bg);
+    color: var(--sel-fg);
+    box-shadow: var(--sel-ring);
+  }
+  .nav-active {
+    background: var(--nav-bg);
+    color: var(--nav-fg);
+    border-color: var(--nav-border);
+    box-shadow: var(--nav-ring);
+  }
+  .nav-active svg {
+    color: var(--nav-icon);
+  }
+  .bubble-mine {
+    background: var(--bubble-mine-bg);
+    color: var(--bubble-mine-fg);
+    border: 1px solid var(--bubble-mine-border);
+  }
+}
+
+/* React Flow */
+.react-flow__background { background: var(--surface-flow-canvas); }
+.react-flow__minimap { background: var(--surface-raised) !important; border-radius: 13px; border: 1px solid var(--border-default); }
+.react-flow__controls { box-shadow: none !important; }
+.react-flow__controls-button { background: var(--surface-overlay) !important; border-bottom: 1px solid var(--border-default) !important; fill: var(--text-primary) !important; }
+.react-flow__controls-button svg { fill: var(--text-primary) !important; }
+.react-flow__edge-path { stroke: var(--accent-text); stroke-width: 2; }
+.react-flow__handle { width: 12px; height: 12px; border: 2px solid var(--surface-base); background: rgb(var(--accent)); }
+.react-flow__attribution { display: none; }
+
+@keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.animate-fade-in { animation: fade-in .18s ease-out; }
+
+/* ---------- Suporte flutuante (botão "Suporte" + janela de atendimento) ----------
+   --support-bottom: distância do botão até a borda de baixo. No computador ele fica colado no canto inferior
+   direito; no celular e no tablet, acima da barra de navegação inferior. No Chat Ao Vivo sobe acima do campo de
+   mensagem e, no editor de automações, acima do minimapa. --support-top: espaço livre no alto da tela. */
+.support-dock { --support-bottom: calc(env(safe-area-inset-bottom) + 88px); --support-top: 64px; }
+.support-dock[data-place='chat'] { --support-bottom: calc(env(safe-area-inset-bottom) + 152px); }
+@media (min-width: 640px) {
+  .support-dock[data-place='editor'] { --support-bottom: calc(env(safe-area-inset-bottom) + 244px); }
+}
+@media (min-width: 1024px) {
+  .support-dock { --support-bottom: 16px; --support-top: 24px; }
+  .support-dock[data-place='chat'] { --support-bottom: 100px; }
+  .support-dock[data-place='editor'] { --support-bottom: 180px; }
+}
+/* com um anexo esperando o envio, o campo de mensagem cresce (prévia do arquivo) e o botão sobe junto */
+body:has(.chat-attachment) .support-dock[data-place='chat'] { --support-bottom: calc(env(safe-area-inset-bottom) + 216px); }
+@media (min-width: 1024px) { body:has(.chat-attachment) .support-dock[data-place='chat'] { --support-bottom: 164px; } }
+
+/* botão retangular com ícone de conversa e o texto "Suporte" */
+.support-bubble {
+  position: fixed;
+  right: 16px;
+  bottom: var(--support-bottom);
+  z-index: 120;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 15px 0 13px;
+  border-radius: 11px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  background: var(--material-primary);
+  border: 1px solid var(--border-accent);
+  box-shadow: var(--shadow-action), 0 10px 26px rgba(0, 0, 0, 0.26);
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+.support-bubble:hover { transform: translateY(-1px); filter: brightness(1.1); }
+.support-bubble:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+@media (min-width: 1024px) { .support-bubble { right: 24px; height: 40px; } }
+
+/* contador de não lidas (no botão fica no canto; em listas, "static") */
+.support-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: inline-flex;
+  min-width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  border-radius: 9999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 0 0 2px var(--surface-base);
+}
+.support-count.static { position: static; box-shadow: none; flex-shrink: 0; }
+
+/* celular: ocupa o espaço entre a barra superior e a barra inferior; do tablet em diante, janela acima do botão */
+.support-window {
+  position: fixed;
+  z-index: 120;
+  left: 8px;
+  right: 8px;
+  top: var(--support-top);
+  bottom: calc(env(safe-area-inset-bottom) + 88px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 22px;
+}
+@media (min-width: 640px) {
+  .support-window {
+    left: auto;
+    right: 16px;
+    top: auto;
+    width: 384px;
+    bottom: calc(var(--support-bottom) + 50px);
+    height: min(620px, calc(100vh - var(--support-bottom) - 50px - var(--support-top)));
+    height: min(620px, calc(100dvh - var(--support-bottom) - 50px - var(--support-top)));
+    border-radius: 24px;
+  }
+}
+@media (min-width: 1024px) { .support-window { right: 24px; } }
+
+/* janela minimizada: barrinha logo acima do botão */
+.support-pill {
+  position: fixed;
+  z-index: 120;
+  right: 16px;
+  bottom: calc(var(--support-bottom) + 48px);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: min(290px, calc(100vw - 32px));
+  padding: 2px 4px 2px 2px;
+  border-radius: 16px;
+}
+@media (min-width: 1024px) { .support-pill { right: 24px; bottom: calc(var(--support-bottom) + 50px); } }

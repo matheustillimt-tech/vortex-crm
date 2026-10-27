@@ -1,0 +1,10 @@
+{
+  "name": "testes-sql",
+  "private": true,
+  "type": "module",
+  "description": "Testes do SQL num Postgres local: node run.mjs ../../migrations inteligencia.mjs",
+  "dependencies": {
+    "embedded-postgres": "17.5.0-beta.15",
+    "pg": "8.13.1"
+  }
+}

@@ -1,0 +1,30 @@
+# Configuração da CLI do Supabase para este projeto.
+# project_id aqui é só um nome local (não é o id do seu projeto no Supabase: esse fica guardado pelo `supabase link`).
+project_id = "vortex-crm"
+
+# Funções chamadas por quem não tem login no painel (provedores, webhooks, links públicos, chaves do MCP).
+# Elas conferem a origem por conta própria (assinatura, token ou chave de serviço), por isso verify_jwt = false.
+# As outras funções usam o padrão (verify_jwt = true): o painel manda o login e o pg_cron manda a chave anon.
+[functions.ai-agent]
+verify_jwt = false
+
+[functions.whatsapp-webhook]
+verify_jwt = false
+
+[functions.zernio-webhook]
+verify_jwt = false
+
+[functions.inbound-webhook]
+verify_jwt = false
+
+[functions.creditos-webhook]
+verify_jwt = false
+
+[functions.funil]
+verify_jwt = false
+
+[functions.mcp]
+verify_jwt = false
+
+[functions.rotacionador]
+verify_jwt = false
