@@ -1,4 +1,4 @@
-// Configuração real das conexões (modo banco): Zapbot (QR Code ou código), Evolution API e Cloud API da Meta.
+// Configuração real das conexões (modo banco): Zapbot (QR Code ou código), Z-API (instância própria), Evolution API e Cloud API da Meta.
 import { useEffect, useMemo, useState } from 'react'
 import { Copy, Loader2, QrCode, RefreshCw, ShieldCheck, CheckCircle2 } from 'lucide-react'
 import { toast, useDB } from '../lib/store'
@@ -285,6 +285,122 @@ export function WebSetup({ connection, onClose, onConnected, call: demoCall, onD
             <button className="font-semibold text-violet-400 hover:underline" onClick={() => switchMode(mode === 'qr' ? 'code' : 'qr')}>
               {mode === 'qr' ? 'Conectar com código' : 'Conectar com QR Code'}
             </button>
+          </p>
+        </>
+      )}
+    </Modal>
+  )
+}
+
+/* ---------- Z-API: instância que a pessoa já tem ---------- */
+
+// A pessoa cola o ID, o token e o Client-Token da instância (e, no avançado, a URL base). O servidor confere, aponta os
+// webhooks da instância para esta conexão e guarda tudo; nada disso volta para o navegador. Depois o pareamento é o mesmo
+// do Zapbot (QR Code ou código). Reabrir uma conexão já cadastrada (zapiHint) vai direto para o QR Code.
+export function ZapiSetup({ connection, onClose, onConnected, call: demoCall, onDemoConnect }) {
+  const call = useMemo(() => demoCall || ((action, extra) => callFn('connection-setup', { action, connectionId: connection.id, ...extra })), [demoCall, connection.id])
+  const [step, setStep] = useState(connection.zapiHint ? 'pair' : 'form') // form | pair
+  const [f, setF] = useState({ instanceId: '', instanceToken: '', clientToken: '', baseUrl: '' })
+  const [advanced, setAdvanced] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [mode, setMode] = useState('qr')
+  const [switching, setSwitching] = useState(false)
+  const [done, setDone] = useState(null)
+
+  const connected = (phone) => {
+    const digits = onlyDigits(phone) || onlyDigits(connection.number)
+    setDone({ phone: digits })
+    onConnected?.(digits)
+    toast('WhatsApp conectado com sucesso!')
+  }
+
+  const submit = async () => {
+    if (!f.instanceId.trim() || !f.instanceToken.trim()) return setError('Informe o ID e o token da instância. O Client-Token é opcional.')
+    setBusy(true)
+    setError('')
+    try {
+      await waitFor(connection.id)
+      const r = await call('zapi-connect', f)
+      if (r?.connected) return connected(r.phone)
+      setMode('qr')
+      setStep('pair')
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const switchMode = async (m) => {
+    if (m === mode || switching) return
+    if (mode === 'code') {
+      setSwitching(true)
+      try {
+        const r = await call('zapbot-reset')
+        if (r?.connected) return connected(r.phone)
+      } catch {} finally {
+        setSwitching(false)
+      }
+    }
+    setMode(m)
+  }
+
+  const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
+  const footer = step === 'form' && !done
+    ? <><button className="btn-secondary" onClick={onClose}>Cancelar</button><button className="btn-primary" disabled={busy} onClick={submit}>{busy ? <><Loader2 size={15} className="animate-spin" /> Conferindo…</> : 'Conferir e conectar'}</button></>
+    : onDemoConnect && !done
+      ? <button className="btn-primary" onClick={() => { setDone({ phone: onlyDigits(onDemoConnect()) }); toast('WhatsApp conectado com sucesso! (simulado)') }}>Simular leitura</button>
+      : undefined
+
+  return (
+    <Modal open onClose={onClose} title={`Conectar ${connection.name}`} subtitle="Z-API: use uma instância que você já tem" footer={footer}>
+      {done ? (
+        <div className="flex flex-col items-center py-6 text-center">
+          <CheckCircle2 size={48} className="mb-3 text-green-400" />
+          <p className="font-semibold">WhatsApp conectado com sucesso</p>
+          {done.phone && <p className="mt-1 font-mono text-sm">+{done.phone}</p>}
+          <p className="mt-1 text-sm text-text-muted">As mensagens desse número já chegam em Chats ao vivo.</p>
+          <button className="btn-primary mt-4" onClick={onClose}>Fechar</button>
+        </div>
+      ) : step === 'form' ? (
+        <>
+          <p className="mb-4 text-sm text-text-secondary">Copie os dados da instância no painel do Z-API, em Instâncias. Eles ficam guardados só no servidor.</p>
+          <Field label="ID da instância">
+            <input className="input font-mono text-xs" autoFocus autoComplete="off" value={f.instanceId} onChange={set('instanceId')} />
+          </Field>
+          <Field label="Token da instância">
+            <input className="input font-mono text-xs" type="password" autoComplete="off" value={f.instanceToken} onChange={set('instanceToken')} />
+          </Field>
+          <Field label="Client-Token (opcional)" hint="Só preencha se você ligou o token de segurança da conta no Z-API.">
+            <input className="input font-mono text-xs" type="password" autoComplete="off" value={f.clientToken} onChange={set('clientToken')} />
+          </Field>
+          {advanced ? (
+            <Field label="URL base" hint="Endereço do Z-API. Deixe em branco para usar o padrão, https://api.z-api.io.">
+              <input className="input font-mono text-xs" placeholder="https://api.z-api.io" value={f.baseUrl} onChange={set('baseUrl')} />
+            </Field>
+          ) : (
+            <button className="btn-ghost mb-3 px-0 text-xs" onClick={() => setAdvanced(true)}>Avançado: trocar a URL base</button>
+          )}
+          <p className="mb-3 rounded-xl bg-amber-500/10 p-3 text-xs text-amber-400">
+            O Vórtex CRM configura sozinho os webhooks dessa instância para receber as mensagens. Se outro sistema usa os webhooks dela, ele deixa de receber.
+          </p>
+          {error && <ErrorNote>{error}</ErrorNote>}
+        </>
+      ) : switching ? (
+        <div className="py-8"><Waiting>Trocando o método…</Waiting></div>
+      ) : (
+        <>
+          {mode === 'qr' ? <QrPane call={call} onConnected={connected} /> : <CodePane call={call} onConnected={connected} />}
+          <p className="mt-5 border-t border-border-subtle pt-3 text-xs text-text-muted">
+            {mode === 'qr' ? 'Não consegue ler o QR Code? ' : 'Prefere ler o QR Code? '}
+            <button className="font-semibold text-violet-400 hover:underline" onClick={() => switchMode(mode === 'qr' ? 'code' : 'qr')}>
+              {mode === 'qr' ? 'Conectar com código' : 'Conectar com QR Code'}
+            </button>
+          </p>
+          <p className="mt-2 text-xs text-text-muted">
+            {connection.zapiHint ? `Instância ${connection.zapiHint}. ` : ''}
+            <button className="font-semibold text-violet-400 hover:underline" onClick={() => { setError(''); setStep('form') }}>Usar outra instância</button>
           </p>
         </>
       )}

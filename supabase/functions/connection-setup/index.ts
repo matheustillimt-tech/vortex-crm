@@ -1,5 +1,7 @@
 // Configura uma conexão de WhatsApp a partir do painel (só membros da empresa da conexão, com o módulo Conexões).
 // Ações: zapbot-start | zapbot-qr | zapbot-code | zapbot-reset | evolution-connect | qr | status | disconnect | webhook-info | remove
+// Z-API (instância que a pessoa já tem): zapi-connect; depois zapbot-qr, zapbot-code, zapbot-reset, status, disconnect e
+// remove valem para ela também (mesmas rotas de instância). Nunca cria nem apaga instância na conta Z-API.
 // Instagram pela Zernio: instagram-key-check | instagram-key-connect (chave de quem conecta) | instagram-start | instagram-finish
 // (chave da plataforma); status, disconnect e remove também
 // API Oficial pelo Embedded Signup ("Entrar com o Facebook"): meta-config | meta-start | meta-event | meta-complete | meta-finish | meta-sync
@@ -14,6 +16,7 @@ import * as meta from '../_shared/meta.ts'
 import { templateStatus } from '../_shared/meta-webhook.ts'
 import { mergeTemplateExtra, templateComponents, templateDraft, templateRow } from '../_shared/templates.ts'
 import * as zap from '../_shared/zapbot.ts'
+import { CHALLENGE_MSG, unhookZapi, zapiCredsFrom, zapiFriendlyError, zapiStatus } from '../_shared/zapi.ts'
 import * as zernioApi from '../_shared/zernio.ts'
 
 
@@ -102,6 +105,14 @@ Deno.serve(async (req) => {
   // Trocou do Zapbot para outro provedor: apaga a conexão antiga no Zapbot para não ocupar vaga na conta
   const dropZapbot = () =>
     existing?.provider === 'zapbot' ? zap.deleteInstance(admin, existing.credentials.instanceId).catch((e) => console.error('zapbot delete', e)) : null
+  // Trocou do Z-API para outro provedor (ou removeu): desliga os webhooks da instância da pessoa. Best effort, nunca apaga a instância.
+  const dropZapi = (creds = existing?.credentials) =>
+    existing?.provider === 'zapi' ? unhookZapi(creds as zap.ZapCreds).catch((e) => console.error('zapi unhook', e instanceof Error ? e.message : e)) : null
+  // Saiu do Z-API para outro provedor: tira a marca da tela do Z-API do painel
+  const noZapiMark = () => {
+    const { via: _via, zapiHint: _hint, ...rest } = conn.extra || {}
+    return existing?.provider === 'zapi' || conn.extra?.via === 'zapi' ? { extra: rest } : {}
+  }
   const embedded = existing?.provider === 'meta' && !!existing.credentials?.tokenInVault
 
   // Tira o acesso desta conexão à conta da Meta: para de assinar os webhooks da conta (se nenhuma outra conexão da
@@ -349,8 +360,9 @@ Deno.serve(async (req) => {
           throw secErr
         }
         await dropZapbot()
+        await dropZapi()
         const view = metaView(creds, phone, waba, { status: 'authorized', alert: null })
-        await setConn({ provider: 'oficial', status: 'disconnected', number: fmtPhone(onlyDigits(phone.display_phone_number || '')), meta: view })
+        await setConn({ provider: 'oficial', status: 'disconnected', number: fmtPhone(onlyDigits(phone.display_phone_number || '')), meta: view, ...noZapiMark() })
         await patchSession(body.sessionId, { status: 'authorized', step: 'authorized', waba_id: wabaId, phone_number_id: phoneNumberId, business_id: creds.businessId || null })
         return json({ ok: true, number: phone.display_phone_number || '', ...view })
       } catch (e) {
@@ -510,6 +522,8 @@ Deno.serve(async (req) => {
 
     /* ---------- Zapbot: WhatsApp não oficial (QR Code ou código de pareamento) ---------- */
     if (action === 'zapbot-start') {
+      // Conexão com instância do Z-API: não cria instância no Zapbot por cima (a tela dela usa zapi-connect)
+      if (existing?.provider === 'zapi') return json({ error: 'Esta conexão usa uma instância do Z-API. Abra a conexão de novo para conectar pelo Z-API.' }, 409)
       // Reabrir a conexão reaproveita a instância já criada. Só cria outra se ela tiver sido apagada no Zapbot (404).
       if (existing?.provider === 'zapbot') {
         try {
@@ -539,13 +553,59 @@ Deno.serve(async (req) => {
         if (error.code === '23505') return json({ ok: true, reused: true })
         throw error
       }
-      await setConn({ provider: 'web', status: 'disconnected' })
+      await setConn({ provider: 'web', status: 'disconnected', ...noZapiMark() })
       return json({ ok: true, created: true })
+    }
+
+    /* ---------- Z-API: instância que a pessoa já tem (ID, token, Client-Token e URL base opcional) ---------- */
+    // Confere as credenciais, aponta os webhooks da instância para esta conexão e guarda tudo em connection_secrets.
+    // Depois o pareamento (QR Code ou código) segue pelas mesmas ações do Zapbot.
+    if (action === 'zapi-connect') {
+      if (existing && !['zapi', 'zapbot', 'evolution'].includes(existing.provider)) {
+        return json({ error: 'Esta conexão é de outro tipo. Crie uma conexão nova para o Z-API.' }, 409)
+      }
+      const prev = existing?.provider === 'zapi' ? existing.credentials : {}
+      const id = String(body.instanceId || '').trim()
+      // mesma instância: mantém o segredo do webhook; outra instância: segredo novo
+      const parsed = zapiCredsFrom(body, prev.instanceId === id && prev.webhookToken ? prev.webhookToken : randomToken())
+      if ('error' in parsed) return json({ error: parsed.error }, 400)
+      const creds = parsed.creds
+      const st = await zapiStatus(creds) // confere ID, token e Client-Token antes de qualquer outra coisa
+      // Uma instância, uma conexão: os webhooks dela só apontam para um lugar
+      const taken = json({ error: 'Essa instância do Z-API já está em outra conexão do Vórtex CRM. Exclua a outra conexão primeiro.' }, 409)
+      const { data: used, error: usedError } = await admin.from('connection_secrets').select('connection_id').eq('provider', 'zapi')
+        .eq('credentials->>instanceId', creds.instanceId).neq('connection_id', conn.id).limit(1)
+      if (usedError) throw usedError
+      if (used?.length) return taken
+      // Grava primeiro (o índice único segura duas conexões com a mesma instância) e só depois aponta os webhooks.
+      // Se o Z-API recusar o webhook, volta o segredo como estava.
+      const flags: zap.WebhookFlags = { notifySentByMe: true, notifyGroupMessages: false }
+      const { error } = await admin.from('connection_secrets').upsert({ connection_id: conn.id, company_id: conn.company_id, provider: 'zapi', credentials: { ...creds, webhookFlags: flags, createdBy: user.id } })
+      if (error) {
+        if (error.code === '23505') return taken
+        throw error
+      }
+      try {
+        await zap.setWebhook(creds, webhookUrl(conn.id, creds.webhookToken!), flags)
+      } catch (e) {
+        await (existing
+          ? admin.from('connection_secrets').update({ provider: existing.provider, credentials: existing.credentials }).eq('connection_id', conn.id)
+          : admin.from('connection_secrets').delete().eq('connection_id', conn.id))
+        throw e
+      }
+      if (existing?.provider === 'zapi' && prev.instanceId !== creds.instanceId) await dropZapi(prev)
+      await dropZapbot()
+      await setConn({
+        provider: 'web', status: st.connected ? 'connected' : 'disconnected', ...(st.phone ? { number: fmtPhone(st.phone) } : {}),
+        extra: { ...(conn.extra || {}), via: 'zapi', zapiHint: `…${creds.instanceId.slice(-4)}` },
+      })
+      return json({ ok: true, connected: st.connected, phone: st.phone })
     }
 
     /* ---------- Excluir a conexão (libera a vaga no provedor) ---------- */
     if (action === 'remove') {
       if (existing?.provider === 'zapbot') await zap.deleteInstance(admin, existing.credentials.instanceId)
+      await dropZapi() // Z-API: só desliga os webhooks; a instância continua na conta da pessoa
       if (embedded) await releaseMeta().catch((e) => console.error('meta release', e)) // a conexão sai mesmo se a Meta falhar
       const { error } = await admin.from('connections').delete().eq('id', conn.id)
       if (error) throw error
@@ -567,7 +627,8 @@ Deno.serve(async (req) => {
       const { error } = await saveSecret('meta', creds)
       if (error) throw error
       await dropZapbot()
-      await setConn({ provider: 'oficial', status: 'connected', number: fmtPhone(onlyDigits(info.display_phone_number || '')), extra: { ...(conn.extra || {}), profileName: info.verified_name, quality: info.quality_rating } })
+      await dropZapi()
+      await setConn({ provider: 'oficial', status: 'connected', number: fmtPhone(onlyDigits(info.display_phone_number || '')), extra: { ...((noZapiMark().extra as Record<string, unknown>) ?? conn.extra ?? {}), profileName: info.verified_name, quality: info.quality_rating } })
       return json({ ok: true, number: info.display_phone_number, name: info.verified_name, webhookUrl: webhookUrl(conn.id, creds.webhookToken), verifyToken: creds.verifyToken })
     }
 
@@ -601,49 +662,55 @@ Deno.serve(async (req) => {
       const { error } = await saveSecret('evolution', creds)
       if (error) throw error
       await dropZapbot()
+      await dropZapi()
       await setEvolutionWebhook(creds, hook).catch((e) => console.error('webhook set', e))
       if (!qr?.base64) qr = await evo(creds, 'GET', `/instance/connect/${encodeURIComponent(creds.instance)}`)
-      await setConn({ provider: 'web', status: 'disconnected' })
+      await setConn({ provider: 'web', status: 'disconnected', ...noZapiMark() })
       return json({ ok: true, instance: creds.instance, qr: qr?.base64 || null, pairingCode: qr?.pairingCode || null })
     }
 
     if (!existing) return json({ error: 'Conexão ainda não configurada.' }, 400)
     const c = existing.credentials as Creds
 
-    if (existing.provider === 'zapbot') {
+    if (existing.provider === 'zapbot' || existing.provider === 'zapi') {
       const z = c as unknown as zap.ZapCreds
+      const isZapi = existing.provider === 'zapi'
+      // Z-API: o "error" do status é só texto de estado (fica de fora) e o telefone vem de /device (zapi.ts)
+      const statusOf = (): Promise<{ connected: boolean; phone: string; error?: string }> => (isZapi ? zapiStatus(z) : zap.status(z))
       const connected = async (phone: string) => {
         await setConn({ status: 'connected', ...(phone ? { number: fmtPhone(onlyDigits(phone)) } : {}) })
         return { connected: true, phone }
       }
       if (action === 'zapbot-qr') {
-        const st = await zap.status(z)
+        const st = await statusOf()
         if (st.connected) return json(await connected(st.phone))
         if (st.error) return json({ connected: false, error: st.error }) // pareamento recusado: a mensagem vem uma vez só
         const qr = await zap.qrImage(z)
-        if (qr.state === 'connected') return json(await connected(''))
+        if (qr.state === 'connected') return json(await connected(isZapi ? (await zapiStatus(z).catch(() => null))?.phone || '' : ''))
+        if (qr.state === 'challenge') return json({ connected: false, error: CHALLENGE_MSG })
         return json({ connected: false, image: qr.state === 'ready' ? qr.image : null, expiresInMs: qr.state === 'ready' ? qr.expiresInMs : null })
       }
       if (action === 'zapbot-code') {
         const phone = onlyDigits(String(body.phone || ''))
         if (phone.length < 10 || phone.length > 15) return json({ error: 'Informe o número com DDI e DDD, só dígitos. Ex.: 55119XXXXXXXX.' }, 400)
-        const st = await zap.status(z)
+        const st = await statusOf()
         if (st.connected) return json(await connected(st.phone))
         if (st.error) return json({ connected: false, error: st.error })
         const r = await zap.pairingCode(z, phone)
         if (r.state === 'connected') return json(await connected(''))
+        if (r.state === 'challenge') return json({ connected: false, error: CHALLENGE_MSG })
         return json({ connected: false, code: r.state === 'ready' ? r.code : null })
       }
       // Cancela a tentativa de pareamento em andamento (trocar de número ou voltar do código para o QR).
       // Confere o status antes: se o número acabou de conectar, não desvincula.
       if (action === 'zapbot-reset') {
-        const st = await zap.status(z)
+        const st = await statusOf()
         if (st.connected) return json(await connected(st.phone))
         await zap.disconnect(z)
         return json({ connected: false })
       }
       if (action === 'status') {
-        const st = await zap.status(z)
+        const st = await statusOf()
         if (st.connected) {
           await connected(st.phone)
           return json({ state: 'open', number: st.phone })
@@ -652,6 +719,8 @@ Deno.serve(async (req) => {
         return json({ state: 'close', error: st.error ?? null })
       }
       if (action === 'disconnect') {
+        // marca antes: o Z-API avisa a desconexão pelo webhook e, com a conexão ainda "conectada", ele pediria um restart
+        if (isZapi) await setConn({ status: 'disconnected' })
         await zap.disconnect(z)
         await setConn({ status: 'disconnected' })
         return json({ ok: true })
@@ -695,9 +764,13 @@ Deno.serve(async (req) => {
 
     return json({ error: 'Ação desconhecida' }, 400)
   } catch (e) {
-    console.error(action, e instanceof Error ? e.message : e)
+    // erro de rede traz a URL da instância, com o token no caminho: nunca vai para o log
+    console.error(action, String(e instanceof Error ? e.message : e).replace(/\/token\/[^/\s)]+/g, '/token/***'))
     // Configuração do servidor (credenciais do Zapbot): aviso para chamar o administrador, com a dica do que ajustar
     if (e instanceof zap.ZapbotConfigError) return json({ error: e.message, code: 'zapbot_not_configured', hint: e.hint }, 503)
+    // Z-API: a mensagem nunca repete a resposta crua (pode ter o token)
+    const providerError = e instanceof zap.ZapbotError || e instanceof TypeError || (e instanceof DOMException && e.name === 'TimeoutError')
+    if (providerError && (action === 'zapi-connect' || existing?.provider === 'zapi')) return json({ error: zapiFriendlyError(e) }, 502)
     if (e instanceof zernioApi.ZernioError) return json({ error: e.code === 'BAD_KEY' ? e.message : `Instagram: ${e.message}`, code: e.code }, e.code === 'BAD_KEY' ? 400 : e.code === 'NO_KEY' ? 503 : 502)
     return json({ error: zap.friendlyError(e) }, 502)
   }

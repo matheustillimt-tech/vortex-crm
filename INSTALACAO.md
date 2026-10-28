@@ -29,6 +29,7 @@ Crie (ou separe) estas contas antes de começar:
 | [Vercel](https://vercel.com) | Sim | Painel no ar | Hobby grátis para testar; uso comercial pede o Pro |
 | Provedor de IA: [OpenAI](https://platform.openai.com), [Google AI Studio](https://aistudio.google.com) (Gemini) ou compatível (Groq, DeepSeek, OpenRouter) | Para os agentes de IA | Respostas da IA | Pago por uso (o Gemini tem cota grátis) |
 | [Zapbot](https://zapbot.online) | Para WhatsApp por QR Code | Conexão não oficial do WhatsApp | Pago |
+| [Z-API](https://www.z-api.io) | Opcional, se você já tem uma instância lá | Conexão não oficial do WhatsApp, no lugar do Zapbot | Pago |
 | [Meta for Developers](https://developers.facebook.com) | Só para a API Oficial | WhatsApp oficial pelo "Entrar com o Facebook" | Grátis; as mensagens são cobradas pela Meta |
 | [Zernio](https://zernio.com) | Só para Instagram | Direct do Instagram | A caixa de mensagens vem no plano pago |
 | [ElevenLabs](https://elevenlabs.io) | Não | Ouvir áudios e responder em áudio | Tem plano grátis |
@@ -280,6 +281,32 @@ ao vivo** conversa com ele sem WhatsApp.
 Se aparecer "Avise o administrador da plataforma", faltam os segredos do Zapbot ou a senha está errada (o superadmin
 vê o detalhe na tela).
 
+### 8.2.1 WhatsApp por uma instância da Z-API que você já tem
+
+Se você já paga uma instância na Z-API, dá para usar ela no lugar do Zapbot. Não precisa de conta no Zapbot nem de
+segredo novo no Supabase: os dados da instância ficam guardados só no servidor, por conexão.
+
+1. No painel da Z-API, abra **Instâncias** e a sua instância. Copie o **ID da instância** e o **Token da instância**.
+2. No Vórtex CRM: **Conexões → Nova Conexão → Z-API**, dê um nome e clique em **Criar conexão**.
+3. Cole o ID e o token. O campo **Client-Token (opcional)** você só preenche se ligou o **token de segurança da
+   conta** na Z-API. Se não ligou, deixe em branco. O link **Avançado:
+   trocar a URL base** você não precisa mexer (o padrão é `https://api.z-api.io`).
+4. Clique em **Conferir e conectar**. O sistema confere os dados e aponta os avisos da instância (webhooks) para o
+   seu CRM. Se o número já estava conectado na Z-API, pronto. Se não, aparece o QR Code (ou o código de pareamento)
+   para você ler no celular, do mesmo jeito que no Zapbot.
+5. Na lista de conexões ela aparece como **Z-API (QR Code)**. A rotina `vortex-crm-connection-monitor` também confere
+   esse número a cada 2 minutos, e quando a Z-API avisa que o número caiu o sistema tenta reconectar sozinho.
+
+Bom saber:
+- O CRM nunca cria nem apaga instância na sua conta da Z-API. Excluir a conexão no CRM só desliga os avisos da
+  instância; ela continua sua.
+- Uma instância só pode estar em uma conexão.
+- Funciona como no Zapbot no chat, fluxos, agentes de IA, disparos, MCP, foto do contato e confirmação de entrega
+  e leitura. Diferenças: o menu vai como texto numerado (sem botões), não aparece "digitando…" e grupos ainda não são
+  suportados.
+- Se o celular pedir uma chave de acesso (passkey) na hora de conectar, conecte o número pelo painel da Z-API e
+  depois clique de novo em **Conferir e conectar**.
+
 ### 8.3 WhatsApp pela API Oficial (Meta)
 
 Exige um app seu na Meta, com a empresa verificada. Resumo:
@@ -337,7 +364,7 @@ claude mcp add --transport http vortex-crm https://SEU-PROJECT-REF.supabase.co/f
 "Só leitura" consulta; "Leitura e envio" também cria contato e manda mensagem. Limite de 60 chamadas por minuto por
 chave.
 
-### 8.8 Vender o plano e Créditos de IA (Vórtex Pay) — opcional
+### 8.8 Vender o plano e Créditos de IA (Vórtex Pay) (opcional)
 
 Só para quem vai revender o CRM para outras empresas.
 
@@ -350,12 +377,12 @@ Só para quem vai revender o CRM para outras empresas.
 
 Os créditos e o plano só são liberados quando o aviso assinado chega e o valor confere.
 
-### 8.9 Vórtex Call — opcional
+### 8.9 Vórtex Call (opcional)
 
 Na habilidade **Agendar no Vórtex Call** do agente, preencha a agenda e o endereço do seu Vórtex Call (ou cadastre
 `VORTEX_CALL_URL` para valer como padrão). A IA consulta os horários livres e agenda sozinha.
 
-### 8.10 Funil no Kanban — avançado
+### 8.10 Funil no Kanban (avançado)
 
 A função `funil` recebe avisos de outros sistemas (isca, Vórtex Grupo, aula, checkout, área de membros) e anda o card
 do contato num quadro do Kanban. Não tem tela de configuração: cria-se por SQL uma linha em `public.funis` (quadro e
@@ -371,7 +398,7 @@ Os detalhes de cada formato estão no começo de `supabase/functions/_shared/fun
 - [ ] Você criou a conta, confirmou o e-mail e entrou.
 - [ ] O botão **Acesso ao desenvolvedor** aparece (você é superadmin).
 - [ ] Configurações → Integrações → a chave de IA foi salva e o **Testar** respondeu.
-- [ ] Conexões → um número conectado por QR Code (status "Conectado").
+- [ ] Conexões → um número conectado por QR Code (status "Conectado"), pelo Zapbot ou por uma instância da Z-API.
 - [ ] Mandou uma mensagem de outro celular para esse número e ela apareceu no **Chat ao vivo**.
 - [ ] Respondeu pelo painel e a resposta chegou no celular.
 - [ ] Um agente de IA ativo, ligado ao número, respondeu sozinho.
@@ -399,6 +426,10 @@ select id, status_code, error_msg, created from net._http_response order by crea
 
 **"Avise o administrador da plataforma" ao conectar por QR Code.** Faltam `ZAPBOT_EMAIL`/`ZAPBOT_PASSWORD` ou a senha
 mudou. Cadastre de novo com `npx supabase secrets set` e espere alguns minutos.
+
+**A Z-API não conecta ("Conferir e conectar" dá erro).** Confira se copiou o ID e o token da **instância** (não o
+token da conta). Se você ligou o token de segurança da conta na Z-API, o Client-Token é obrigatório; se não ligou,
+deixe o campo vazio. Se a mensagem disser que a instância já está em outra conexão, exclua a conexão antiga primeiro.
 
 **O agente de IA não responde.** Confira: chave de IA salva e testada, agente **ativo**, ligado ao número certo, o
 número conectado, a conversa na coluna "Atendimento IA" (não assumida por alguém) e o modo de teste vazio. O motivo

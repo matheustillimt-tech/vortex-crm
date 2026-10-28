@@ -1,9 +1,9 @@
-// Recebe eventos da Meta (Cloud API), do Zapbot e da Evolution API.
+// Recebe eventos da Meta (Cloud API), do Zapbot, do Z-API (instância da própria pessoa, mesmo formato do Zapbot) e da Evolution API.
 // - URL do app do Vórtex CRM na Meta (API Oficial pelo "Entrar com o Facebook"): /functions/v1/whatsapp-webhook, sem parâmetros.
 //   Uma URL só para todas as contas: a assinatura X-Hub-Signature-256 com o META_APP_SECRET autentica a chamada e o
 //   phone_number_id de cada mensagem indica a conexão. Eventos da conta (acesso removido, qualidade, nome, templates)
 //   atualizam a conexão e ficam em meta_account_events.
-// - URL por conexão: /functions/v1/whatsapp-webhook?c=<connectionId>&t=<webhookToken> (Zapbot, Evolution e Meta manual).
+// - URL por conexão: /functions/v1/whatsapp-webhook?c=<connectionId>&t=<webhookToken> (Zapbot, Z-API, Evolution e Meta manual).
 //   O token da URL (e, na Meta manual, a assinatura com o App Secret informado) autentica a chamada.
 // Por isso verify_jwt = false.
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
@@ -14,6 +14,7 @@ import { companyModules } from '../_shared/access.ts'
 import { withMetaToken, type Secret } from '../_shared/secrets.ts'
 import { isAuthError, metaApp, subscribedApps } from '../_shared/meta.ts'
 import { accountChanges, deliveryErrorText, splitByPhone, templateStatus, type AccountChange } from '../_shared/meta-webhook.ts'
+import { restart as zapRestart, type ZapCreds } from '../_shared/zapbot.ts'
 
 const URL_ = Deno.env.get('SUPABASE_URL')!
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -204,11 +205,17 @@ Deno.serve(async (req) => {
     const { settings, mods } = ctx
     if (secret.provider === 'meta') {
       await processMeta(conn, secret, settings, mods, body)
-    } else if (secret.provider === 'zapbot' || secret.provider === 'sandbox') {
-      // sandbox: conexão de teste, recebe no mesmo formato do Zapbot
-      const { messages, statuses, connected } = parseZapbot(body)
+    } else if (secret.provider === 'zapbot' || secret.provider === 'zapi' || secret.provider === 'sandbox') {
+      // sandbox: conexão de teste, recebe no mesmo formato do Zapbot. zapi: instância Z-API da própria pessoa, mesmo formato.
+      const { messages, statuses, connected, disconnected } = parseZapbot(body)
       // chega no pareamento e em toda reconexão: idempotente
       if (connected) await admin.from('connections').update({ status: 'connected', ...(connected.phone ? { number: `+${connected.phone}` } : {}) }).eq('id', conn.id)
+      // Z-API avisa a queda: marca na hora e tenta reconectar mantendo a sessão (o monitor confere de novo depois).
+      // No Zapbot quem cuida é o monitor (connection-monitor).
+      if (disconnected && secret.provider === 'zapi') {
+        await admin.from('connections').update({ status: 'disconnected', extra: { ...(conn.extra || {}), lastError: disconnected.error || null } }).eq('id', conn.id)
+        if (conn.status === 'connected') await zapRestart(secret.credentials as unknown as ZapCreds).catch((e) => console.error('zapi restart', conn.id, e instanceof Error ? e.message : e))
+      }
       for (const m of messages) await handleInbound(admin, conn, secret, settings, m, mods).catch((e) => console.error('inbound zapbot', e))
       for (const s of statuses) {
         const delivery = s.status === 'READ' || s.status === 'PLAYED' ? 'read' : s.status === 'RECEIVED' ? 'delivered' : null

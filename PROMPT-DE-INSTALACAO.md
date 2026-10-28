@@ -59,7 +59,9 @@ PASSOS:
     superadmin (INSTALACAO.md) pra eu rodar no SQL Editor com o meu e-mail. Depois me ajude a liberar os módulos
     Instagram e Vórtex Inteligência para a minha empresa, se eu quiser.
 12. Integrações, uma de cada vez e só as que eu quiser: chave de IA (Configurações → Integrações), WhatsApp por QR
-    Code (Zapbot), WhatsApp oficial (Meta), Instagram (Zernio), ElevenLabs, MCP.
+    Code (Zapbot), WhatsApp por uma instância que eu já tenho na Z-API (Conexões → Nova Conexão → Z-API: eu colo
+    só o ID e o token da instância direto na tela; o Client-Token só se eu liguei o token de segurança na Z-API),
+    WhatsApp oficial (Meta), Instagram (Zernio), ElevenLabs, MCP.
 13. Rode o checklist de teste do INSTALACAO.md comigo e me diga o que ficou pendente.
 ```
 

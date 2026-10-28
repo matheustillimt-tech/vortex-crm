@@ -1,4 +1,5 @@
-// Envio pelos provedores de WhatsApp suportados: Cloud API da Meta, Zapbot e Evolution API (QR Code).
+// Envio pelos provedores de WhatsApp suportados: Cloud API da Meta, Zapbot, Z-API (instância da própria pessoa, mesmas
+// rotas do Zapbot) e Evolution API (QR Code).
 // As credenciais ficam em public.connection_secrets (só o servidor lê).
 // "sandbox": conexão de teste sem WhatsApp (só entra por SQL). Nada sai do servidor; as mensagens ficam no painel
 // como enviadas, para validar fluxos e agentes de ponta a ponta sem mandar nada a ninguém.
@@ -8,7 +9,9 @@ import { igKind, igSend, type IgCreds } from './zernio.ts'
 
 // "instagram": Direct do Instagram pela Zernio (zernio.ts). Nele o destino (`to`) é o id da conversa na Zernio
 // (chats.external_id), não um telefone. Use recipientOf para escolher o destino certo.
-export type Provider = 'meta' | 'evolution' | 'uazapi' | 'zapbot' | 'sandbox' | 'instagram'
+export type Provider = 'meta' | 'evolution' | 'uazapi' | 'zapbot' | 'zapi' | 'sandbox' | 'instagram'
+// Zapbot e Z-API: mesmas rotas de instância (/instances/{id}/token/{token}/*), mesmo envio de texto e mídia.
+const zapLike = (p: Provider) => p === 'zapbot' || p === 'zapi'
 export type Creds = Record<string, string>
 
 export const onlyDigits = (s: string) => (s || '').replace(/\D/g, '')
@@ -95,14 +98,15 @@ export async function sendText(provider: Provider, c: Creds, to: string, text: s
     const j = await http('POST', `${evoBase(c)}/send/text`, { token: c.token }, { number, text })
     return j.messageid ?? j.id ?? null
   }
-  if (provider === 'zapbot') return comOutraForma(number, (phone) => zapSend(c as unknown as ZapCreds, 'send-text', { phone, message: text }), onNumero)
+  if (zapLike(provider)) return comOutraForma(number, (phone) => zapSend(c as unknown as ZapCreds, 'send-text', { phone, message: text }), onNumero)
   throw new Error('Provedor de WhatsApp desconhecido')
 }
 
 export const numberedMenu = (text: string, options: string[]) =>
   `${text}\n\n${options.map((o, i) => `${i + 1}. ${o}`).join('\n')}\n\nResponda com o número da opção.`
 
-// Menu: na Meta e no Zapbot vira botões (até 3) ou lista (até 10); nos outros provedores, texto numerado.
+// Menu: na Meta e no Zapbot vira botões (até 3) ou lista (até 10); nos outros provedores, texto numerado. No Z-API o corpo dos
+// botões é outro (buttonActions/optionList) e eles não são confiáveis em API não oficial: lá vai o texto numerado.
 export async function sendMenu(provider: Provider, c: Creds, to: string, text: string, options: string[]): Promise<{ id: string | null; shown: string }> {
   if (provider === 'meta' && options.length && options.length <= 10) {
     const interactive = options.length <= 3
@@ -176,7 +180,7 @@ export async function sendMedia(provider: Provider, c: Creds, to: string, m: Out
     return id
   }
   const number = destination(to)
-  if (provider === 'zapbot') {
+  if (zapLike(provider)) {
     const z = c as unknown as ZapCreds
     // documento: rota no padrão Z-API (send-document/<extensão>); quem chama manda o link se ela falhar
     const ext = (m.fileName?.split('.').pop() || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '') || 'pdf'
@@ -210,7 +214,7 @@ export async function sendMedia(provider: Provider, c: Creds, to: string, m: Out
   throw new Error('Provedor de WhatsApp desconhecido')
 }
 
-// "Digitando..." antes de responder (só o Zapbot tem). Falha aqui é ignorada: é só cortesia.
+// "Digitando..." antes de responder (só o Zapbot tem; o Z-API não documenta send-presence). Falha aqui é ignorada: é só cortesia.
 export async function sendTyping(provider: Provider, c: Creds, to: string, ms: number) {
   if (provider === 'instagram') return // sem robô no Instagram (Fase 1)
   if (provider !== 'zapbot') return

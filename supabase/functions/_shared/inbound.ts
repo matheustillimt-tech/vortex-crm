@@ -97,14 +97,25 @@ const ZAP_MEDIA: [string, string, string, (b: any) => string][] = [
 ]
 
 export function parseZapbot(body: any) {
-  const out = { messages: [] as Inbound[], statuses: [] as { waId: string; status: string }[], connected: null as null | { phone: string } }
+  const out = {
+    messages: [] as Inbound[], statuses: [] as { waId: string; status: string }[],
+    connected: null as null | { phone: string }, disconnected: null as null | { error: string },
+  }
   if (!body || body.isTest) return out
   if (body.type === 'ConnectedCallback') {
     out.connected = { phone: onlyDigits(String(body.connectedPhone || body.phone || '')) }
     return out
   }
+  // Z-API: o número caiu ou foi desvinculado (quem trata é o webhook, só para conexões "zapi")
+  if (body.type === 'DisconnectedCallback') {
+    out.disconnected = { error: String(body.error || '') }
+    return out
+  }
+  // Zapbot manda messageId; o Z-API manda ids (um ou vários)
   if (body.type === 'MessageStatusCallback') {
-    if (body.messageId) out.statuses.push({ waId: body.messageId, status: String(body.status || '').toUpperCase() })
+    const status = String(body.status || '').toUpperCase()
+    const ids = Array.isArray(body.ids) ? body.ids : body.messageId ? [body.messageId] : []
+    for (const id of ids) if (id) out.statuses.push({ waId: String(id), status })
     return out
   }
   // só conversas 1:1 (grupos, listas de transmissão, status e canais ficam de fora)

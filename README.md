@@ -14,6 +14,9 @@ tiram dúvidas e passam para uma pessoa quando precisa.
   documentos.
 - **Conexões de WhatsApp:**
   - por **QR Code** (API não oficial, pelo Zapbot), sem burocracia;
+  - por uma **instância da Z-API que você já tem** (Z-API é um serviço pago de WhatsApp por API): você cola o ID e o
+    token da instância e pronto, sem precisar de conta no Zapbot. O Client-Token é opcional (só se você ligou o token
+    de segurança da conta na Z-API);
   - pela **API Oficial da Meta**, com o botão "Entrar com o Facebook" (a própria empresa escolhe o número e paga as
     mensagens direto à Meta);
   - **Instagram Direct** pela Zernio (API oficial da Meta).
@@ -60,7 +63,7 @@ ficam fora do menu e não se conectam à Meta.
 - **Servidor:** Supabase (Postgres, Auth, Realtime, Storage, Vault, pg_cron e pg_net) e Edge Functions em Deno
   (TypeScript).
 - **Hospedagem do painel:** Vercel.
-- **Integrações:** Zapbot (WhatsApp por QR Code), Meta Cloud API (WhatsApp oficial), Zernio (Instagram), OpenAI,
+- **Integrações:** Zapbot (WhatsApp por QR Code), Z-API (instância própria), Meta Cloud API (WhatsApp oficial), Zernio (Instagram), OpenAI,
   Google Gemini ou qualquer provedor compatível com a OpenAI (Groq, DeepSeek, OpenRouter), ElevenLabs (voz) e,
   opcionalmente, Vórtex Pay e Vórtex Call.
 
@@ -73,6 +76,7 @@ ficam fora do menu e não se conectam à Meta.
 | **Vercel** | Colocar o painel no ar | Plano Hobby grátis para testar; uso comercial pede o plano Pro |
 | **Provedor de IA** (OpenAI, Google Gemini ou compatível) | Os agentes de IA | Pago por uso (o Gemini tem cota grátis) |
 | **Zapbot** | Conectar WhatsApp por QR Code | Pago (veja os planos no site deles) |
+| **Z-API** (opcional) | Conectar uma instância de WhatsApp que você já tem lá, no lugar do Zapbot | Pago por instância (veja os planos no site deles) |
 | **Meta for Developers** (opcional) | WhatsApp pela API Oficial | Criar o app é grátis; as mensagens são cobradas pela Meta |
 | **Zernio** (opcional) | Direct do Instagram | A caixa de mensagens vem no plano pago |
 | **ElevenLabs** (opcional) | Ouvir áudios e responder em áudio | Tem plano grátis |
@@ -139,7 +143,9 @@ PASSOS:
     superadmin (INSTALACAO.md) pra eu rodar no SQL Editor com o meu e-mail. Depois me ajude a liberar os módulos
     Instagram e Vórtex Inteligência para a minha empresa, se eu quiser.
 12. Integrações, uma de cada vez e só as que eu quiser: chave de IA (Configurações → Integrações), WhatsApp por QR
-    Code (Zapbot), WhatsApp oficial (Meta), Instagram (Zernio), ElevenLabs, MCP.
+    Code (Zapbot), WhatsApp por uma instância que eu já tenho na Z-API (Conexões → Nova Conexão → Z-API: eu colo
+    só o ID e o token da instância direto na tela; o Client-Token só se eu liguei o token de segurança na Z-API),
+    WhatsApp oficial (Meta), Instagram (Zernio), ElevenLabs, MCP.
 13. Rode o checklist de teste do INSTALACAO.md comigo e me diga o que ficou pendente.
 ```
 

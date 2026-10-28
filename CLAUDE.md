@@ -26,7 +26,7 @@ Instalação: `INSTALACAO.md`. Prompt de instalação guiada: `PROMPT-DE-INSTALA
 | Blocos do editor de fluxos | `src/lib/blocks.js` (tela) e `supabase/functions/_shared/flow.ts` (execução) |
 | Gatilhos dos fluxos | `supabase/functions/_shared/triggers-core.ts` (regras puras, usadas também pelo painel) e `triggers.ts` |
 | Agente de IA | `supabase/functions/_shared/agent.ts` (motor), `agent-core.ts` (quem atende, pausas), `ai.ts` (provedores) |
-| WhatsApp e Instagram | `_shared/whatsapp.ts`, `_shared/zapbot.ts`, `_shared/meta.ts`, `_shared/zernio.ts`, funções `whatsapp-webhook`, `zernio-webhook`, `send-message`, `connection-setup`, `connection-monitor` |
+| WhatsApp e Instagram | `_shared/whatsapp.ts`, `_shared/zapbot.ts`, `_shared/zapi.ts` (instância Z-API, mesmas rotas do Zapbot), `_shared/meta.ts`, `_shared/zernio.ts`, funções `whatsapp-webhook`, `zernio-webhook`, `send-message`, `connection-setup`, `connection-monitor` |
 | Créditos de IA e plano | `_shared/carteira.ts`, `_shared/recarga.ts`, `_shared/pagamento-vortexpay.ts`, funções `creditos`, `creditos-webhook`, `assinatura` |
 | Vórtex Inteligência | `_shared/inteligencia/`, função `inteligencia`, tela `src/pages/Inteligencia.jsx` |
 | MCP | `supabase/functions/mcp/` |

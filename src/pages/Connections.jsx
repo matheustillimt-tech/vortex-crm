@@ -5,7 +5,7 @@ import { useDB, toast } from '../lib/store'
 import { BACKEND } from '../lib/supabase'
 import { callFn } from '../lib/backend'
 import { demoEmbeddedSignup, startEmbeddedSignup, useMetaSdk } from '../lib/meta'
-import { MetaManualSetup, WebSetup, WebhookInfo } from './ConnectionSetup'
+import { MetaManualSetup, WebSetup, WebhookInfo, ZapiSetup } from './ConnectionSetup'
 import { FacebookButton, MetaIntro, MetaSdkNotice, MetaSetup } from './MetaSignup'
 import { InstagramIntro, InstagramKeySetup } from './InstagramSetup'
 import { ChannelIcon, channelOf } from '../components/Channel'
@@ -36,6 +36,7 @@ const demoCall = async (action) => {
   await new Promise((r) => setTimeout(r, 500))
   if (action === 'zapbot-qr') return { connected: false, image: fakeQrImage(String(Math.floor(Date.now() / 20000))), expiresInMs: 20000 }
   if (action === 'zapbot-code') return { connected: false, code: 'K7QW-2MZD' }
+  if (action === 'zapi-connect') return { ok: true, connected: false }
   if (action === 'status') return { state: 'close' }
   return { ok: true, connected: false }
 }
@@ -93,10 +94,12 @@ export default function Connections() {
     return number
   }
 
+  // Z-API: no painel é uma conexão "web" (QR Code) marcada com via = 'zapi'; quem fala com o Z-API é o servidor
   const create = () => {
     if (!form.name) return toast('Dê um nome para a conexão.', 'error')
-    const c = db.add('connections', { ...form, number: '', status: 'disconnected', createdAt: new Date().toISOString() })
-    setModal(form.provider === 'web' ? { qr: c } : { meta: c })
+    const zapi = form.provider === 'zapi'
+    const c = db.add('connections', { ...form, ...(zapi ? { provider: 'web', via: 'zapi' } : {}), number: '', status: 'disconnected', createdAt: new Date().toISOString() })
+    setModal(zapi ? { zapi: c } : form.provider === 'web' ? { qr: c } : { meta: c })
     setForm({ name: '', provider: 'web', plan: 'starter' })
   }
 
@@ -118,7 +121,7 @@ export default function Connections() {
     setForm({ name: '', provider: 'web', plan: 'starter' })
     setModal({ instagram: c })
   }
-  const openConnect = (c) => setModal(c.provider === 'instagram' ? { instagram: c } : c.provider === 'web' ? { qr: c } : { meta: c })
+  const openConnect = (c) => setModal(c.provider === 'instagram' ? { instagram: c } : c.via === 'zapi' ? { zapi: c } : c.provider === 'web' ? { qr: c } : { meta: c })
 
   return (
     <div className="mx-auto max-w-[1400px]">
@@ -161,7 +164,7 @@ export default function Connections() {
               <div className="mb-4 flex flex-wrap gap-1.5">
                 {c.provider === 'instagram'
                   ? <span className="badge-info inline-flex items-center gap-1"><ChannelIcon channel="instagram" size={13} className="rounded-[4px]" /> Instagram · API oficial</span>
-                  : <span className={c.provider === 'oficial' ? 'badge-info' : 'badge-primary'}>{c.provider === 'oficial' ? 'API Oficial (Meta)' : 'API Web (QR Code)'}</span>}
+                  : <span className={c.provider === 'oficial' ? 'badge-info' : 'badge-primary'}>{c.provider === 'oficial' ? 'API Oficial (Meta)' : c.via === 'zapi' ? 'Z-API (QR Code)' : 'API Web (QR Code)'}</span>}
                 <span className="badge-muted">Canal {c.plan === 'pro' ? 'Pro' : 'Starter'}</span>
                 {rotatorsWith(c.id, db.rotators).map((r) => (
                   <button key={r.id} onClick={() => setModal('rotator')} title={c.status === 'connected' ? 'Na roda deste rotacionador' : 'Fora da roda enquanto estiver desconectada'}
@@ -213,11 +216,12 @@ export default function Connections() {
       )}
 
       <Modal open={modal === 'new'} onClose={() => setModal(null)} title="Nova Conexão" subtitle="Cada conexão ocupa um slot do seu plano"
-        footer={<><button className="btn-secondary" onClick={() => setModal(null)}>Cancelar</button>{form.provider === 'web' && <button className="btn-primary" onClick={create}>Criar conexão</button>}</>}>
+        footer={<><button className="btn-secondary" onClick={() => setModal(null)}>Cancelar</button>{(form.provider === 'web' || form.provider === 'zapi') && <button className="btn-primary" onClick={create}>Criar conexão</button>}</>}>
         <Field label="Nome da conexão"><input className="input" autoFocus placeholder="Ex.: Vendas Principal" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
         <Field label="Tipo de API">
-          <div className={cx('grid gap-2', hasInstagram ? 'sm:grid-cols-3' : 'sm:grid-cols-2')}>
+          <div className={cx('grid gap-2', hasInstagram ? 'sm:grid-cols-2' : 'sm:grid-cols-3')}>
             {[['web', 'API Web', 'Conecta pelo WhatsApp do celular, com QR Code ou código de pareamento.', QrCode], ['oficial', 'API Oficial (Meta)', 'Oficial da Meta: entre com o Facebook, sem copiar tokens.', ShieldCheck],
+              ['zapi', 'Z-API', 'Já tem uma instância no Z-API? Cole o ID e o token dela.', Plug],
               ...(hasInstagram ? [['instagram', 'Instagram (Direct)', 'Direct da sua conta profissional, pela API oficial da Meta.', null]] : [])].map(([id, t, d, I]) => (
               <button key={id} onClick={() => setForm({ ...form, provider: id })} className={cx('rounded-[16px] border p-3 text-left', form.provider === id ? 'choice-on' : 'border-border')}>
                 {I ? <I size={18} className="mb-1 text-violet-400" /> : <ChannelIcon channel="instagram" size={18} className="mb-1" />}<p className="text-sm font-semibold">{t}</p><p className="text-xs text-text-muted">{d}</p>
@@ -246,6 +250,9 @@ export default function Connections() {
       {modal?.qr && (BACKEND
         ? <WebSetup connection={modal.qr} onClose={() => setModal(null)} onConnected={(phone) => markConnected(modal.qr, phone)} />
         : <WebSetup connection={modal.qr} onClose={() => setModal(null)} call={demoCall} onDemoConnect={() => connectDemo(modal.qr)} />)}
+      {modal?.zapi && (BACKEND
+        ? <ZapiSetup connection={modal.zapi} onClose={() => setModal(null)} onConnected={(phone) => markConnected(modal.zapi, phone)} />
+        : <ZapiSetup connection={modal.zapi} onClose={() => setModal(null)} call={demoCall} onDemoConnect={() => connectDemo(modal.zapi)} />)}
       {modal?.meta && <MetaSetup connection={modal.meta} flow={modal.flow} onClose={() => setModal(null)} onManual={() => setModal({ manual: modal.meta })} />}
       {modal?.manual && BACKEND && <MetaManualSetup connection={modal.manual} onClose={() => setModal(null)} />}
       {modal?.hook && <WebhookInfo connection={modal.hook} onClose={() => setModal(null)} />}

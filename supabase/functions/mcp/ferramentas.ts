@@ -556,6 +556,8 @@ async function conexaoDeGrupos(admin: any, cid: string, conexaoId: unknown): Pro
   }
   const segredo = await connectionSecret(admin, conexao.id)
   if (!segredo) return `A conexão "${conexao.name}" não está configurada para enviar.`
+  if (segredo.provider === 'zapi')
+    return `Grupos ainda não funcionam em conexão do Z-API. "${conexao.name}" usa uma instância do Z-API; use uma conexão por QR Code criada pelo Vórtex CRM.`
   if (segredo.provider !== 'zapbot')
     return `Grupos só funcionam em conexão por QR Code. "${conexao.name}" é ${segredo.provider === 'meta' ? 'da API oficial da Meta, que não manda em grupo' : `do tipo ${segredo.provider}`}.`
   return { conexao, provider: segredo.provider as Provider, creds: segredo.credentials }

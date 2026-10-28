@@ -1,8 +1,10 @@
 // Foto de perfil dos contatos.
-// - WhatsApp pela API Web (Zapbot): POST /contact-picture. A API Oficial da Meta não entrega foto de contato.
+// - WhatsApp pela API Web (Zapbot): POST /contact-picture. Z-API: GET /profile-picture?phone=.
+//   A API Oficial da Meta não entrega foto de contato.
 // - Instagram (Zernio): participantPicture da conversa. A Meta só libera a foto de quem já mandou mensagem.
 // O link das duas expira em horas: baixa na hora e guarda no bucket público "avatares". Procura de novo a cada 7 dias.
 import { zernio, type IgCreds } from './zernio.ts'
+import { instanceCall, type ZapCreds } from './zapbot.ts'
 
 export const BUCKET = 'avatares'
 export const DIAS_PARA_PROCURAR_DE_NOVO = 7
@@ -21,6 +23,12 @@ export async function linkFotoWhatsapp(c: Record<string, string>, phone: string)
   if (!r.ok) return null
   const j = await r.json().catch(() => ({}))
   return j?.hasPicture && typeof j.url === 'string' && j.url.startsWith('https://') ? j.url : null
+}
+
+export async function linkFotoZapi(c: Record<string, string>, phone: string): Promise<string | null> {
+  const r = await instanceCall(c as unknown as ZapCreds, 'GET', `profile-picture?phone=${String(phone || '').replace(/\D/g, '')}`)
+  const link = r.status === 200 ? r.json?.link : null
+  return typeof link === 'string' && link.startsWith('https://') ? link : null
 }
 
 export async function linkFotoInstagram(c: IgCreds, conversationId: string): Promise<string | null> {
@@ -54,8 +62,9 @@ export async function atualizarFoto(admin: any, contact: any, chat: { external_i
     if (!contact?.id || !secret || (!forcar && procurouHaPouco(contact.avatar_at))) return contact?.avatar_url ?? null
     let link: string | null = null
     if (secret.provider === 'zapbot' && contact.phone) link = await linkFotoWhatsapp(secret.credentials, contact.phone)
+    else if (secret.provider === 'zapi' && contact.phone) link = await linkFotoZapi(secret.credentials, contact.phone)
     else if (secret.provider === 'instagram' && chat?.external_id) link = await linkFotoInstagram(secret.credentials, chat.external_id)
-    else if (secret.provider !== 'zapbot' && secret.provider !== 'instagram') return contact.avatar_url ?? null // Meta/Evolution/sandbox: sem foto
+    else if (!['zapbot', 'zapi', 'instagram'].includes(secret.provider)) return contact.avatar_url ?? null // Meta/Evolution/sandbox: sem foto
     const salvo = link ? await guardarFoto(admin, contact.company_id, contact.id, link) : null
     const patch: Record<string, unknown> = { avatar_at: new Date().toISOString() }
     if (salvo) patch.avatar_url = salvo

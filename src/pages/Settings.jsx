@@ -685,7 +685,6 @@ function Labels() {
 const INTEGRATIONS = [
   { id: 'vortexpay', name: BRAND.payName, cat: 'Pagamentos', desc: 'Receba no Brasil, no México e na América Latina.', featured: true },
   { id: 'nfe', name: 'Emissor NF-e', cat: 'Notas Fiscais', desc: 'Emissão automatizada de Notas Fiscais eletrônicas de vendas' },
-  { id: 'utmify', name: 'UTMify', cat: 'Rastreamento', desc: 'Rastreamento de campanhas e atribuição de vendas avançada' },
   { id: 'openai', name: 'OpenAI GPT', cat: 'Inteligência Artificial', desc: 'Respostas dos agentes de IA, leitura de imagens, transcrição de áudio e voz' },
   { id: 'gemini', name: 'Google Gemini', cat: 'Inteligência Artificial', desc: 'Respostas dos agentes de IA e leitura de imagens' },
   { id: 'compat', name: 'Outro provedor de IA', cat: 'Inteligência Artificial', desc: 'Groq, DeepSeek, OpenRouter e outros com API no padrão da OpenAI' },
