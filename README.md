@@ -40,6 +40,8 @@ tiram dúvidas e passam para uma pessoa quando precisa.
 - **Área do dono da plataforma (superadmin):** liga e desliga módulos por empresa, pacotes de módulos, assinaturas,
   central de suporte para os clientes e Créditos de IA.
 - **Opcional, para quem revende o CRM:** cobrança do plano e venda de Créditos de IA pré-pagos pela Vórtex Pay.
+- **Tutoriais prontos:** a aba Tutoriais já vem com 7 vídeos curtos do Grupo Vórtex (painel, equipe, WhatsApp por QR
+  Code, contatos, etiquetas, respostas rápidas e Kanban). Os vídeos que você cadastrar aparecem junto.
 - **Modo demonstração:** sem banco configurado, o painel abre com dados de exemplo guardados só no navegador.
 
 Alguns blocos aparecem no editor de fluxos mas ainda não executam no servidor (o fluxo pula e deixa um aviso na
@@ -175,6 +177,9 @@ vercel.json                rotas do painel e o link /r/ do rotacionador
   em `src/index.css` e `tailwind.config.js`.
 - **Páginas de privacidade e termos:** `public/privacidade/index.html` e `public/termos/index.html` são modelos com
   "SUA EMPRESA LTDA". Troque pelos seus dados e peça para um advogado revisar.
+- **Tutoriais prontos:** para esconder os vídeos do Grupo Vórtex da aba Tutoriais (por exemplo, se você revende o CRM
+  com a sua marca), cadastre `VITE_TUTORIAIS_PADRAO=off` no `.env.local` e na Vercel. A lista fica em
+  `src/lib/tutorials-padrao.js`.
 - **Frases com o nome do produto** nas telas e nas mensagens do servidor: procure por "Vórtex CRM" no código.
 
 ## Testes

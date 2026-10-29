@@ -37,7 +37,11 @@ export default function Tutorials() {
       {open && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 backdrop-blur-sm" style={{ background: 'var(--scrim)' }} onMouseDown={() => setOpen(null)} role="dialog" aria-modal="true" aria-label={open.title}>
           <div className="flex w-full max-w-[420px] flex-col items-center gap-3" onMouseDown={(e) => e.stopPropagation()}>
-            <video key={open.id} src={open.video} poster={open.cover || undefined} controls autoPlay playsInline className="max-h-[80vh] w-auto max-w-full rounded-[20px] bg-black" style={{ aspectRatio: '9 / 16' }} />
+            {open.embed ? (
+              <iframe key={open.id} src={open.embed} title={open.title} allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;fullscreen" allowFullScreen className="h-[80vh] max-h-[746px] w-auto max-w-full rounded-[20px] border-0 bg-black" style={{ aspectRatio: '9 / 16' }} />
+            ) : (
+              <video key={open.id} src={open.video} poster={open.cover || undefined} controls autoPlay playsInline className="max-h-[80vh] w-auto max-w-full rounded-[20px] bg-black" style={{ aspectRatio: '9 / 16' }} />
+            )}
             <div className="flex w-full items-center justify-between gap-3">
               <p className="text-sm text-white" style={{ fontWeight: 650 }}>{open.title}</p>
               <button className="btn-secondary" onClick={() => setOpen(null)}>Fechar</button>

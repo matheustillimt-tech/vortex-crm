@@ -145,6 +145,7 @@ Sempre que mudar um segredo, rode o `secrets set` de novo. Sempre que mudar cód
 | `VITE_SUPABASE_URL` | Endereço do seu projeto | Supabase → Project Settings → API Keys | Sim |
 | `VITE_SUPABASE_ANON_KEY` | Chave pública do projeto | Supabase → Project Settings → API Keys → Legacy → anon | Sim |
 | `VITE_SITE_URL` | Domínio mostrado nos links do rotacionador | O endereço do painel | Não (sem ela, usa o endereço aberto) |
+| `VITE_TUTORIAIS_PADRAO` | Esconde os tutoriais prontos da aba Tutoriais | Escreva `off` para esconder | Não (vazia, os tutoriais aparecem) |
 | `SUPABASE_DB_PASSWORD` | Senha do banco, usada pela CLI no `link` e no `db push` | Você criou com o projeto | Só no seu computador. **Não** vai para a Vercel |
 
 **Servidor** (arquivo `supabase/functions/.env`, enviado com `npx supabase secrets set`):
@@ -389,6 +390,12 @@ do contato num quadro do Kanban. Não tem tela de configuração: cria-se por SQ
 coluna de cada etapa) e os tokens de cada fonte em `public.funil_segredos`. O endereço de cada fonte é
 `https://SEU-PROJECT-REF.supabase.co/functions/v1/funil?f=<id do funil>&fonte=<isca|grupo|webinar|checkout|plataforma>&t=<token>`.
 Os detalhes de cada formato estão no começo de `supabase/functions/_shared/funil-fontes.ts`.
+
+### 8.11 Tutoriais (já vêm prontos)
+
+A aba Tutoriais já vem com 7 vídeos curtos do Grupo Vórtex, que tocam direto de qualquer endereço. Para somar os seus,
+cadastre na tabela `tutorials` (o vídeo e a capa no bucket `tutorials`); se usar o mesmo `slug` de um pronto, vale o
+seu. Para esconder os prontos, cadastre `VITE_TUTORIAIS_PADRAO=off`.
 
 ---
 

@@ -1,9 +1,11 @@
 // Tutoriais em vídeo (aba Tutoriais). Banco real: a política da tabela já devolve só os tutoriais dos módulos
 // da empresa atual; o filtro daqui repete a regra (superadmin vê tudo pelo banco, mas a aba mostra o da empresa).
-// Modo demonstração: sem tutoriais.
+// Junto com os do banco vêm os tutoriais prontos do Grupo Vórtex (tutorials-padrao.js), que também aparecem no modo
+// demonstração. Para escondê-los: VITE_TUTORIAIS_PADRAO=off.
 import { useEffect, useState } from 'react'
 import { BACKEND, supabase } from './supabase'
 import { useDB, useModules } from './store'
+import { juntarTutoriais } from './tutorials-padrao'
 
 const url = (path) => (path ? supabase.storage.from('tutorials').getPublicUrl(path).data.publicUrl : null)
 
@@ -26,7 +28,7 @@ export function useTutorials() {
     return () => { alive = false }
   }, [companyId])
 
-  const list = state.list.filter((t) => t.modules.every((m) => modules.includes(m)))
+  const list = juntarTutoriais(state.list).filter((t) => t.modules.every((m) => modules.includes(m)))
   return { ...state, list }
 }
 
